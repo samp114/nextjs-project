@@ -4,30 +4,30 @@ import { Trash, Edit2 } from "lucide-react";
 import Input from "./Input";
 
 export default function View({ tasks, onDelete, onUpdate }) {
-  const [editIndex, setEditIndex] = useState(null);
+  const [editTaskId, setEditTaskId] = useState(null);
 
   return (
     <div className="p-4">
       {tasks.length === 0 ? (
         <p className="text-gray-500">No tasks yet.</p>
       ) : (
-        tasks.map((task, index) => (
+        tasks.map((task) => (
           <div
-            key={index}
+            key={task._id}
             className="flex justify-between items-center bg-gray-100 p-2 mb-2 rounded"
           >
-            <span className="text-black">{task}</span>
+            <span className="text-black">{task.title}</span>
 
             <div className="flex gap-2 ml-2">
               <button
-                onClick={() => setEditIndex(index)}
+                onClick={() => setEditTaskId(task._id)}
                 className="text-blue-600"
                 aria-label="Edit"
               >
                 <Edit2 size={18} />
               </button>
               <button
-                onClick={() => onDelete(index)}
+                onClick={() => onDelete(task._id)}
                 className="text-red-600"
                 aria-label="Delete"
               >
@@ -35,16 +35,16 @@ export default function View({ tasks, onDelete, onUpdate }) {
               </button>
             </div>
 
-           {/* popup thing */}
-            {editIndex === index && (
+            
+            {editTaskId === task._id && (
               <Input
                 isOpen={true}
-                onClose={() => setEditIndex(null)}
+                onClose={() => setEditTaskId(null)}
                 onSave={(newValue) => {
-                  onUpdate(index, newValue);
-                  setEditIndex(null);
+                  onUpdate(task._id, newValue); 
+                  setEditTaskId(null);
                 }}
-                defaultValue={task}   
+                defaultValue={task.title} 
                 mode="edit"
               />
             )}

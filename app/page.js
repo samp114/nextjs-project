@@ -1,4 +1,6 @@
 "use client";
+const API_URL = "http://localhost:5000/api/tasks";
+
 import { useState, useEffect } from "react";
 import Header from "./components/Header";
 import View from "./components/View";
@@ -8,39 +10,70 @@ export default function Home() {
   const [newTask, setNewTask] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
 
-  // load tasks 
+
   useEffect(() => {
-    const stored = JSON.parse(localStorage.getItem("tasks")) || [];
-    setTasks(stored);
+    const fetchTasks = async () => {
+      try {
+        const res = await fetch(API_URL);
+        const data = await res.json();
+        setTasks(data);
+      } catch (err) {
+        console.error("Error fetching tasks:", err);
+      }
+    };
+    
+    fetchTasks();
   }, []);
 
-  // save tasks
-  useEffect(() => {
-    localStorage.setItem("tasks", JSON.stringify(tasks));
-  }, [tasks]);
-
-  const addTask = () => {
+  const addTask = async () => {
     if (newTask.trim() === "") return;
-    setTasks([...tasks, newTask.trim()]);
-    setNewTask("");
-    setShowAddModal(false); 
+    try {
+      const res = await fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: newTask, status: "in-progress" }),
+      });
+      const task = await res.json();
+      setTasks([...tasks, task]); 
+      setNewTask("");
+      setShowAddModal(false);
+    } catch (err) {
+      console.error("Error adding task:", err);
+    }
   };
 
-  const deleteTask = (index) => {
-    const updated = tasks.filter((_, i) => i !== index);
-    setTasks(updated);
+
+  const updateTask = async (id, newText) => {
+    try {
+      const res = await fetch(`${API_URL}/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: newText }),
+      });
+      const updated = await res.json();
+      setTasks(tasks.map((t) => (t._id === id ? updated : t)));
+    } catch (err) {
+      console.error("Error updating task:", err);
+    }
   };
 
-  const updateTask = (index, newText) => {
-    const updated = [...tasks];
-    updated[index] = newText;
-    setTasks(updated);
+  
+  const deleteTask = async (id) => {
+    try {
+      await fetch(`${API_URL}/${id}`, { method: "DELETE" });
+      setTasks(tasks.filter((t) => t._id !== id));
+    } catch (err) {
+      console.error("Error deleting task:", err);
+    }
   };
+
+ 
+
 
   return (
     <div className="min-h-screen bg-gray-50">
       <Header onAdd={addTask} />
-      
+
       
       <div className="flex items-center p-4 gap-2">
         <input
@@ -56,7 +89,6 @@ export default function Home() {
         >
           +
         </button>
-        
         <button
           onClick={() => setShowAddModal(true)}
           className="bg-black text-white px-4 py-2 rounded hover:bg-gray-700"
